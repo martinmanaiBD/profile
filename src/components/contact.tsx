@@ -16,20 +16,33 @@ export function Contact() {
     message: "",
   })
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [submissionStatus, setSubmissionStatus] = useState<"success" | "error" | null>(null)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsSubmitting(true)
+    setSubmissionStatus(null)
 
-    // Simulate form submission
-    await new Promise((resolve) => setTimeout(resolve, 1000))
+    try {
+      const response = await fetch("/api/send", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(formData),
+      })
 
-    // Reset form
-    setFormData({ name: "", email: "", message: "" })
-    setIsSubmitting(false)
-
-    // You would typically send this data to your backend here
-    console.log("Form submitted:", formData)
+      if (response.ok) {
+        setSubmissionStatus("success")
+        setFormData({ name: "", email: "", message: "" })
+      } else {
+        setSubmissionStatus("error")
+      }
+    } catch {
+      setSubmissionStatus("error")
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -102,6 +115,14 @@ export function Contact() {
                   {isSubmitting ? "Sending..." : "Send Message"}
                 </Button>
               </form>
+              {submissionStatus === "success" && (
+                <p className="text-green-500 mt-4 text-center">Your message has been sent successfully!</p>
+              )}
+              {submissionStatus === "error" && (
+                <p className="text-red-500 mt-4 text-center">
+                  There was an error sending your message. Please try again later.
+                </p>
+              )}
             </CardContent>
           </Card>
         </div>
